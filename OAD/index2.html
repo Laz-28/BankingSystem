@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Bank Simulator</title>
+    <!-- Load Inter font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Plain CSS -->
+    <style>
+        :root {
+            --color-gray-50: #f7fafc;
+            --color-gray-200: #e5e7eb;
+            --color-gray-300: #d1d5db;
+            --color-gray-500: #6b7280;
+            --color-gray-600: #4b5563;
+            --color-gray-800: #1f2937;
+            --color-gray-900: #111827;
+            --color-white: #ffffff;
+            --color-indigo-600: #4f46e5;
+            --color-indigo-700: #4338ca;
+            --color-blue-100: #dbeafe;
+            --color-blue-800: #1e40af;
+            --color-green-50: #ecfdf5;
+            --color-green-500: #10b981;
+            --color-green-600: #16a34a;
+            --color-green-700: #15803d;
+            --color-red-50: #fef2f2;
+            --color-red-500: #ef4444;
+            --color-red-600: #dc2626;
+            --color-red-700: #b91c1c;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-gray-50);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        /* Utility */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Base Card Style */
+        .card {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* App Container */
+        .app-container {
+            width: 100%;
+            max-width: 64rem; /* max-w-4xl */
+            background-color: var(--color-white);
+            border-radius: 0.75rem; /* rounded-xl */
+            padding: 1.5rem; /* p-6 */
+        }
+
+        .app-title {
+            font-size: 1.875rem; /* text-3xl */
+            font-weight: 800; /* font-extrabold */
+            color: var(--color-gray-900);
+            margin-bottom: 0.5rem; /* mb-2 */
+        }
+
+        .app-subtitle {
+            color: var(--color-gray-600);
+            margin-top: 0;
+            margin-bottom: 2rem; /* mb-8 */
+        }
+
+        .status-message {
+            margin-bottom: 1.5rem; /* mb-6 */
+            padding: 0.75rem; /* p-3 */
+            background-color: var(--color-blue-100);
+            color: var(--color-blue-800);
+            border-radius: 0.5rem; /* rounded-lg */
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 500; /* font-medium */
+        }
+
+        /* Account Section */
+        .balance-card {
+            margin-bottom: 2rem; /* mb-8 */
+            padding: 1.5rem; /* p-6 */
+            background-color: var(--color-indigo-600);
+            color: var(--color-white);
+            border-radius: 0.75rem; /* rounded-xl */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .balance-card p:first-child {
+            font-size: 0.875rem; /* text-sm */
+            opacity: 0.75;
+            margin: 0;
+        }
+
+        #balance-display {
+            font-size: 2.25rem; /* text-4xl */
+            font-weight: 700; /* font-bold */
+            margin-top: 0.25rem; /* mt-1 */
+            margin-bottom: 0;
+        }
+
+        /* Transaction Grid */
+        .transaction-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem; /* gap-6 */
+            margin-bottom: 2.5rem; /* mb-10 */
+        }
+
+        .transaction-card {
+            padding: 1.5rem; /* p-6 */
+            background-color: var(--color-white);
+            border: 1px solid var(--color-gray-200);
+            border-radius: 0.75rem; /* rounded-xl */
+        }
+
+        .transaction-card h2 {
+            font-size: 1.25rem; /* text-xl */
+            font-weight: 600; /* font-semibold */
+            color: var(--color-gray-800);
+            margin-top: 0;
+            margin-bottom: 1rem; /* mb-4 */
+        }
+
+        .transaction-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem; /* space-y-4 */
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem; /* p-3 */
+            border: 1px solid var(--color-gray-300);
+            border-radius: 0.5rem; /* rounded-lg */
+            box-sizing: border-box; /* Ensures padding doesn't affect width */
+        }
+        .form-input:focus {
+            outline: 2px solid var(--color-indigo-600);
+            border-color: var(--color-indigo-600);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.75rem 0; /* py-3 */
+            color: var(--color-white);
+            font-weight: 600; /* font-semibold */
+            border-radius: 0.5rem; /* rounded-lg */
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .btn-deposit {
+            background-color: var(--color-green-600);
+        }
+        .btn-deposit:hover {
+            background-color: var(--color-green-700);
+        }
+
+        .btn-withdraw {
+            background-color: var(--color-red-600);
+        }
+        .btn-withdraw:hover {
+            background-color: var(--color-red-700);
+        }
+
+        /* Message Box */
+        #message-box {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(100, 116, 139, 0.5); /* bg-gray-600 bg-opacity-50 */
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .message-box-content {
+            background-color: var(--color-white);
+            border-radius: 0.75rem; /* rounded-xl */
+            padding: 1.5rem; /* p-6 */
+            width: 100%;
+            max-width: 24rem; /* max-w-sm */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        #message-text {
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 500; /* font-medium */
+            color: var(--color-gray-800);
+            margin: 0;
+        }
+
+        #message-close {
+            width: 100%;
+            padding: 0.5rem 0; /* py-2 */
+            background-color: var(--color-indigo-600);
+            color: var(--color-white);
+            font-weight: 600; /* font-semibold */
+            border-radius: 0.5rem; /* rounded-lg */
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+        #message-close:hover {
+            background-color: var(--color-indigo-700);
+        }
+
+        /* Transaction History */
+        .history-card {
+            padding: 1.5rem; /* p-6 */
+            background-color: var(--color-gray-50);
+            border-radius: 0.75rem; /* rounded-xl */
+            border: 1px solid var(--color-gray-200);
+        }
+
+        .history-card h2 {
+            font-size: 1.25rem; /* text-xl */
+            font-weight: 600; /* font-semibold */
+            color: var(--color-gray-800);
+            margin-top: 0;
+            margin-bottom: 1rem; /* mb-4 */
+        }
+
+        #transaction-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem; /* space-y-3 */
+        }
+
+        #transaction-list li {
+            padding: 0.75rem; /* p-3 */
+            border-radius: 0.5rem; /* rounded-lg */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem; /* text-sm */
+        }
+        
+        #transaction-list .tx-placeholder {
+            color: var(--color-gray-500);
+            font-style: italic;
+            display: block;
+            padding: 0;
+            background: none;
+            border: none;
+        }
+
+        .success-bg {
+            background-color: var(--color-green-50);
+            border-left: 4px solid var(--color-green-500);
+        }
+        .error-bg {
+            background-color: var(--color-red-50);
+            border-left: 4px solid var(--color-red-500);
+        }
+        .tx-type {
+            font-weight: 500; /* font-medium */
+            text-transform: capitalize;
+        }
+        .tx-amount {
+            font-weight: 700; /* font-bold */
+        }
+        .tx-amount-deposit {
+            color: var(--color-green-700);
+        }
+        .tx-amount-withdraw {
+            color: var(--color-red-700);
+        }
+        .tx-timestamp {
+            font-size: 0.75rem; /* text-xs */
+            color: var(--color-gray-500);
+        }
+
+        /* Login/Auth Container */
+        .auth-container {
+            width: 100%;
+            max-width: 24rem; /* max-w-sm */
+            background-color: var(--color-white);
+            border-radius: 0.75rem; /* rounded-xl */
+            padding: 2rem; /* p-8 */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .auth-title {
+            font-size: 1.875rem; /* text-3xl */
+            font-weight: 800; /* font-extrabold */
+            color: var(--color-gray-900);
+            margin-bottom: 0.5rem; /* mb-2 */
+            text-align: center;
+        }
+
+        .auth-subtitle {
+            color: var(--color-gray-600);
+            margin-bottom: 1.5rem; /* mb-6 */
+            text-align: center;
+            font-size: 0.875rem; /* text-sm */
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem; /* space-y-4 */
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 0.75rem; /* p-3 */
+            border: 1px solid var(--color-gray-300);
+            border-radius: 0.5rem; /* rounded-lg */
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        .auth-input:focus {
+            outline: 2px solid var(--color-indigo-600);
+            border-color: var(--color-indigo-600);
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 0.75rem 0; /* py-3 */
+            color: var(--color-white);
+            background-color: var(--color-indigo-600);
+            font-weight: 600; /* font-semibold */
+            border-radius: 0.5rem; /* rounded-lg */
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+            font-size: 1rem;
+        }
+        .auth-btn:hover {
+            background-color: var(--color-indigo-700);
+        }
+
+        .auth-toggle {
+            text-align: center;
+            margin-top: 1rem; /* mt-4 */
+            font-size: 0.875rem; /* text-sm */
+            color: var(--color-gray-600);
+        }
+
+        .auth-toggle button {
+            background: none;
+            border: none;
+            color: var(--color-indigo-600);
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: underline;
+            padding: 0;
+        }
+        .auth-toggle button:hover {
+            color: var(--color-indigo-700);
+        }
+
+        .auth-error {
+            color: var(--color-red-600);
+            font-size: 0.875rem; /* text-sm */
+            text-align: center;
+            margin-bottom: 1rem; /* mb-4 */
+        }
+
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem; /* mb-4 */
+            gap: 1rem; /* gap-4 */
+        }
+
+        .app-header-content {
+            flex: 1;
+        }
+
+        .logout-btn {
+            width: auto;
+            padding: 0.5rem 1rem; /* px-4 py-2 */
+            margin-bottom: 0;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        /* Responsive */
+        @media (min-width: 768px) { /* md: */
+            .app-container {
+                padding: 2.5rem; /* sm:p-10 */
+            }
+            .app-title {
+                font-size: 2.25rem; /* sm:text-4xl */
+            }
+            .transaction-grid {
+                grid-template-columns: repeat(2, 1fr); /* md:grid-cols-2 */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <!-- Login/Signup Screen -->
+        <div id="auth-screen" class="auth-container">
+            <h1 class="auth-title">Bank App</h1>
+            <p class="auth-subtitle">Secure Banking Simulator</p>
+            <div id="auth-error" class="auth-error hidden"></div>
+
+            <!-- Login Form -->
+            <form id="login-form" class="auth-form">
+                <input type="text" id="login-username" class="auth-input" placeholder="Username" required>
+                <input type="password" id="login-password" class="auth-input" placeholder="Password" required>
+                <button type="submit" class="auth-btn">Login</button>
+            </form>
+
+            <div class="auth-toggle">
+                Don't have an account? <button type="button" id="toggle-signup">Sign Up</button>
+            </div>
+
+            <!-- Signup Form (Hidden initially) -->
+            <form id="signup-form" class="auth-form hidden">
+                <input type="text" id="signup-username" class="auth-input" placeholder="Choose a username" required>
+                <input type="password" id="signup-password" class="auth-input" placeholder="Create a password" required>
+                <input type="password" id="signup-password-confirm" class="auth-input" placeholder="Confirm password" required>
+                <button type="submit" class="auth-btn">Sign Up</button>
+            </form>
+
+            <div class="auth-toggle hidden" id="signup-toggle">
+                Already have an account? <button type="button" id="toggle-login">Login</button>
+            </div>
+        </div>
+
+        <!-- Main App Container (Hidden until login) -->
+        <div id="app-container" class="app-container hidden">
+            <div class="app-header">
+                <div class="app-header-content">
+                    <h1 class="app-title">My Digital Account</h1>
+                    <p class="app-subtitle">Simple, secure, and persistent banking simulator.</p>
+                </div>
+                <button id="logout-btn" class="btn btn-withdraw logout-btn">Logout</button>
+            </div>
+
+            <!-- Loading/Auth Status -->
+            <div id="status-message" class="status-message">
+                Initializing application...
+            </div>
+
+        <!-- Main Account Section -->
+        <div id="account-section" class="account-section hidden">
+            <div class="balance-card card">
+                <div class="balance-card-left">
+                    <p>Current Balance</p>
+                    <p id="balance-display">Ksh0.00</p>
+                </div>
+            </div>
+
+            <!-- Transaction Forms Grid -->
+            <div class="transaction-grid">
+                <!-- Deposit Card -->
+                <div class="transaction-card">
+                    <h2>Deposit Funds</h2>
+                    <form id="deposit-form" class="transaction-form">
+                        <input type="number" id="deposit-amount" min="0.01" step="0.01" required placeholder="Enter amount"
+                               class="form-input">
+                        <button type="submit" class="btn btn-deposit">
+                            Deposit
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Withdraw Card -->
+                <div class="transaction-card">
+                    <h2>Withdraw Funds</h2>
+                    <form id="withdraw-form" class="transaction-form">
+                        <input type="number" id="withdraw-amount" min="0.01" step="0.01" required placeholder="Enter amount"
+                               class="form-input">
+                        <button type="submit" class="btn btn-withdraw">
+                            Withdraw
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Message Box (Alerts/Confirmations) -->
+            <div id="message-box" class="hidden">
+                <div class="message-box-content">
+                    <p id="message-text"></p>
+                    <button id="message-close">Got It</button>
+                </div>
+            </div>
+
+            <!-- Transaction History -->
+            <div class="history-card">
+                <h2>Transaction History</h2>
+                <ul id="transaction-list">
+                    <li class="tx-placeholder">No transactions yet.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script type="module">
+        // --- Authentication System ---
+        let currentUser = null;
+
+        // UI Elements - Auth Screen
+        const authScreen = document.getElementById('auth-screen');
+        const loginForm = document.getElementById('login-form');
+        const signupForm = document.getElementById('signup-form');
+        const authError = document.getElementById('auth-error');
+        const toggleSignupBtn = document.getElementById('toggle-signup');
+        const toggleLoginBtn = document.getElementById('toggle-login');
+        const loginToggleContainer = loginForm.parentElement.querySelector('.auth-toggle');
+        const signupToggleContainer = document.getElementById('signup-toggle');
+
+        // UI Elements - App
+        const appContainer = document.getElementById('app-container');
+        const statusMessageEl = document.getElementById('status-message');
+        const accountSectionEl = document.getElementById('account-section');
+        const balanceDisplayEl = document.getElementById('balance-display');
+        const transactionListEl = document.getElementById('transaction-list');
+        const depositForm = document.getElementById('deposit-form');
+        const withdrawForm = document.getElementById('withdraw-form');
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
+        const messageClose = document.getElementById('message-close');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        // --- Global Variables & Initialization ---
+        let currentBalance = 0;
+        let transactionHistory = [];
+
+        // --- Authentication Functions ---
+
+        /** Shows error message on auth screen */
+        function showAuthError(message) {
+            authError.textContent = message;
+            authError.classList.remove('hidden');
+            setTimeout(() => authError.classList.add('hidden'), 3000);
+        }
+
+        /** Switches between login and signup forms */
+        function toggleAuthForm() {
+            loginForm.classList.toggle('hidden');
+            signupForm.classList.toggle('hidden');
+            loginToggleContainer.classList.toggle('hidden');
+            signupToggleContainer.classList.toggle('hidden');
+            authError.classList.add('hidden');
+        }
+
+        /** Handles login submission */
+        function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+
+            if (!username || !password) {
+                showAuthError('Please enter both username and password.');
+                return;
+            }
+
+            // Load users from localStorage
+            const users = JSON.parse(localStorage.getItem('bank_users') || '{}');
+
+            if (!users[username]) {
+                showAuthError('Username not found.');
+                return;
+            }
+
+            if (users[username].password !== password) {
+                showAuthError('Incorrect password.');
+                return;
+            }
+
+            // Login successful
+            currentUser = username;
+            localStorage.setItem('bank_currentUser', currentUser);
+            loginForm.reset();
+            showAppScreen();
+        }
+
+        /** Handles signup submission */
+        function handleSignup(event) {
+            event.preventDefault();
+            const username = document.getElementById('signup-username').value.trim();
+            const password = document.getElementById('signup-password').value;
+            const passwordConfirm = document.getElementById('signup-password-confirm').value;
+
+            if (!username || !password || !passwordConfirm) {
+                showAuthError('Please fill in all fields.');
+                return;
+            }
+
+            if (username.length < 3) {
+                showAuthError('Username must be at least 3 characters.');
+                return;
+            }
+
+            if (password.length < 4) {
+                showAuthError('Password must be at least 4 characters.');
+                return;
+            }
+
+            if (password !== passwordConfirm) {
+                showAuthError('Passwords do not match.');
+                return;
+            }
+
+            // Load users from localStorage
+            const users = JSON.parse(localStorage.getItem('bank_users') || '{}');
+
+            if (users[username]) {
+                showAuthError('Username already exists.');
+                return;
+            }
+
+            // Create new user
+            users[username] = { password: password };
+            localStorage.setItem('bank_users', JSON.stringify(users));
+
+            // Auto-login after signup
+            currentUser = username;
+            localStorage.setItem('bank_currentUser', currentUser);
+            signupForm.reset();
+            showAppScreen();
+        }
+
+        /** Transition from auth screen to app */
+        function showAppScreen() {
+            authScreen.classList.add('hidden');
+            appContainer.classList.remove('hidden');
+            accountSectionEl.classList.remove('hidden');
+            loadData();
+        }
+
+        /** Logout and return to login screen */
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('bank_currentUser');
+            appContainer.classList.add('hidden');
+            authScreen.classList.remove('hidden');
+            loginForm.reset();
+            signupForm.reset();
+            authError.classList.add('hidden');
+            // Show login form, hide signup form
+            if (signupForm.classList.contains('hidden') === false) {
+                toggleAuthForm();
+            }
+        }
+
+        // --- Utility Functions ---
+
+        /** Shows a custom message box instead of alert() */
+        function showMessage(text) {
+            messageText.textContent = text;
+            messageBox.classList.remove('hidden');
+        }
+
+        /** Formats a number as currency string */
+        function formatCurrency(amount) {
+            // Use Kenyan Shilling (KES) formatting but normalize the symbol to 'Ksh'
+            const formatted = new Intl.NumberFormat('en-KE', {
+                style: 'currency',
+                currency: 'KES',
+            }).format(amount);
+            // Different browsers/locales may render the KES symbol as 'KSh' or 'KES'.
+            // Normalize to 'Ksh' (lowercase 'sh') to match requested style.
+            return formatted.replace('KSh', 'Ksh').replace('KES', 'Ksh');
+        }
+
+        // --- localStorage Data Operations ---
+
+        /** Renders the transaction list in the UI */
+        function renderTransactions() {
+            if (!transactionListEl) return;
+            transactionListEl.innerHTML = '';
+
+            if (transactionHistory.length === 0) {
+                transactionListEl.innerHTML = '<li class="tx-placeholder">No transactions yet.</li>';
+                return;
+            }
+
+            // Display latest 5 transactions
+            const displayTx = transactionHistory.slice(-5).reverse();
+
+            displayTx.forEach(tx => {
+                const li = document.createElement('li');
+                const typeClass = tx.type === 'deposit' ? 'tx-amount-deposit' : 'tx-amount-withdraw';
+                const bgClass = tx.type === 'deposit' ? 'success-bg' : 'error-bg';
+                const sign = tx.type === 'deposit' ? '+' : '-';
+                const formattedAmount = formatCurrency(tx.amount);
+
+                li.className = bgClass; // Add 'success-bg' or 'error-bg'
+                li.innerHTML = `
+                    <span class="tx-type">${tx.type}</span>
+                    <span class="tx-amount ${typeClass}">${sign} ${formattedAmount}</span>
+                    <span class="tx-timestamp">${new Date(tx.timestamp).toLocaleString()}</span>
+                `;
+                transactionListEl.appendChild(li);
+            });
+        }
+
+        /** Updates the entire UI based on global state */
+        function updateUI() {
+            balanceDisplayEl.textContent = formatCurrency(currentBalance);
+            renderTransactions();
+        }
+
+        /** Saves the current state (balance & transactions) to localStorage */
+        function saveData() {
+            try {
+                const userDataKey = `bank_data_${currentUser}`;
+                localStorage.setItem(userDataKey, JSON.stringify({
+                    balance: currentBalance,
+                    transactions: transactionHistory
+                }));
+                console.log(`Account data saved for user ${currentUser}.`);
+            } catch (error) {
+                console.error('Error saving to localStorage:', error);
+                showMessage('Error saving data: ' + error.message);
+            }
+        }
+
+        /** Loads data from localStorage or initializes it */
+        function loadData() {
+            try {
+                const userDataKey = `bank_data_${currentUser}`;
+                const storedData = localStorage.getItem(userDataKey);
+
+                if (storedData) {
+                    const data = JSON.parse(storedData);
+                    currentBalance = data.balance || 0;
+                    transactionHistory = data.transactions || [];
+                    console.log(`Account data loaded for user ${currentUser}.`);
+                } else {
+                    // Initialize the account if it doesn't exist
+                    console.log('No account data found, initializing with ' + formatCurrency(1000));
+                    currentBalance = 1000.00; // Starting balance
+                    transactionHistory = [{
+                        type: 'deposit',
+                        amount: 1000.00,
+                        timestamp: Date.now(),
+                        note: 'Initial deposit'
+                    }];
+                    saveData(); // Save the initial state
+                }
+
+                updateUI(); // Always update UI after loading
+                statusMessageEl.classList.add('hidden');
+
+            } catch (error) {
+                console.error('Error loading from localStorage:', error);
+                showMessage('Error loading data: ' + error.message);
+                statusMessageEl.textContent = 'Error loading data. Please check console.';
+            }
+        }
+
+        // --- Banking Operations ---
+
+        /** Handles deposit logic */
+        function handleDeposit(event) {
+            event.preventDefault();
+            const inputEl = document.getElementById('deposit-amount');
+            const amount = parseFloat(inputEl.value);
+            inputEl.value = ''; // Clear input
+
+            if (isNaN(amount) || amount <= 0) {
+                showMessage('Please enter a valid deposit amount.');
+                return;
+            }
+
+            // Perform transaction locally
+            currentBalance += amount;
+            transactionHistory.push({
+                type: 'deposit',
+                amount: amount,
+                timestamp: Date.now(),
+            });
+
+            // Save new state to localStorage
+            saveData();
+            updateUI(); // Re-render UI
+            showMessage(`Successfully deposited ${formatCurrency(amount)}.`);
+        }
+
+        /** Handles withdrawal logic */
+        function handleWithdraw(event) {
+            event.preventDefault();
+            const inputEl = document.getElementById('withdraw-amount');
+            const amount = parseFloat(inputEl.value);
+            inputEl.value = ''; // Clear input
+
+            if (isNaN(amount) || amount <= 0) {
+                showMessage('Please enter a valid withdrawal amount.');
+                return;
+            }
+
+            if (amount > currentBalance) {
+                showMessage('Insufficient funds. You cannot withdraw more than your current balance.');
+                return;
+            }
+
+            // Perform transaction locally
+            currentBalance -= amount;
+            transactionHistory.push({
+                type: 'withdrawal',
+                amount: amount,
+                timestamp: Date.now(),
+            });
+
+            // Save new state to localStorage
+            saveData();
+            updateUI(); // Re-render UI
+            showMessage(`Successfully withdrew ${formatCurrency(amount)}.`);
+        }
+
+        // --- Application Setup ---
+
+        function initApp() {
+            try {
+                // 1. Setup Auth Event Listeners
+                loginForm.addEventListener('submit', handleLogin);
+                signupForm.addEventListener('submit', handleSignup);
+                toggleSignupBtn.addEventListener('click', toggleAuthForm);
+                toggleLoginBtn.addEventListener('click', toggleAuthForm);
+
+                // 2. Setup Banking Event Listeners
+                depositForm.addEventListener('submit', handleDeposit);
+                withdrawForm.addEventListener('submit', handleWithdraw);
+                messageClose.addEventListener('click', () => messageBox.classList.add('hidden'));
+                logoutBtn.addEventListener('click', logout);
+
+                // 3. Check if user is already logged in
+                const savedUser = localStorage.getItem('bank_currentUser');
+                if (savedUser) {
+                    currentUser = savedUser;
+                    showAppScreen();
+                } else {
+                    // Show auth screen
+                    authScreen.classList.remove('hidden');
+                }
+
+            } catch (error) {
+                statusMessageEl.textContent = `Initialization Error: ${error.message}. Please check console for details.`;
+                console.error('Initialization failed:', error);
+            }
+        }
+
+        window.onload = initApp;
+
+    </script>
+</body>
+</html>
